@@ -11,13 +11,6 @@
  * A curl HTTP REST wrapper for the binance currency exchange
  */
 namespace Binance;
-
-// PHP version check
-if (version_compare(phpversion(), '7.0', '<=')) {
-    fwrite(STDERR, "Hi, PHP " . phpversion() . " support will be removed very soon as part of continued development.\n");
-    fwrite(STDERR, "Please consider upgrading.\n");
-}
-
 /**
  * Main Binance class
  *
@@ -51,7 +44,7 @@ class API
     protected $btc_total = 0.00;
 
     // /< value of available onOrder assets
-    
+
     protected $exchangeInfo = NULL;
     protected $lastRequest = [];
 
@@ -329,8 +322,8 @@ class API
     {
         return $this->order("BUY", $symbol, $quantity, 0, "MARKET", $flags, true);
     }
-	
-	
+
+
     /**
      * numberOfDecimals() returns the signifcant digits level based on the minimum order amount.
      *
@@ -341,7 +334,7 @@ class API
      */
     public function numberOfDecimals($val = 0.00000001){
         $val = sprintf("%.14f", $val);
-        $parts = explode('.', $val); 
+        $parts = explode('.', $val);
         $parts[1] = rtrim($parts[1], "0");
         return strlen($parts[1]);
     }
@@ -527,18 +520,18 @@ class API
     public function exchangeInfo()
     {
         if(!$this->exchangeInfo){
-            
+
             $arr = $this->httpRequest("v1/exchangeInfo");
-            
+
             $this->exchangeInfo = $arr;
             $this->exchangeInfo['symbols'] = null;
-            
+
             foreach($arr['symbols'] as $key => $value){
                 $this->exchangeInfo['symbols'][$value['symbol']] = $value;
             }
-            
+
         }
-        
+
         return $this->exchangeInfo;
     }
 
@@ -547,8 +540,8 @@ class API
         $params["wapi"] = true;
         return $this->httpRequest("v3/assetDetail.html", 'GET', $params, true);
     }
-	
-	
+
+
     /**
      * Fetch current(daily) trade fee of symbol, values in percentage.
      * for more info visit binance official api document
@@ -563,7 +556,7 @@ class API
             "symbol" => $symbol,
             "wapi" => true,
         ];
-	    
+
         return $this->httpRequest("v3/tradeFee.html", 'GET', $params, true);
     }
 
@@ -953,12 +946,12 @@ class API
                 unset($params['wapi']);
                 $base = $this->wapi;
             }
-		
+
             if (isset($params['sapi'])) {
                 unset($params['sapi']);
                 $base = $this->sapi;
             }
-		
+
             $query = http_build_query($params, '', '&');
             $signature = hash_hmac('sha256', $query, $this->api_secret);
             if ($method === "POST") {
@@ -1031,15 +1024,15 @@ class API
             // not outputing errors, hides it from users and ends up with tickets on github
             throw new \Exception('Curl error: ' . curl_error($curl));
         }
-    
+
         $header_size = curl_getinfo($curl, CURLINFO_HEADER_SIZE);
         $header = substr($output, 0, $header_size);
         $output = substr($output, $header_size);
-        
+
         curl_close($curl);
-        
+
         $json = json_decode($output, true);
-        
+
         $this->lastRequest = [
             'url' => $url,
             'method' => $method,
@@ -1240,8 +1233,8 @@ class API
                 $btcTotal = ($obj['free'] + $obj['locked']) / $priceData['BTCUSDT'];
                 $balances[$asset]['btcValue'] = $btcValue;
                 $balances[$asset]['btcTotal'] = $btcTotal;
-                $btc_value += $btcValue;
-                $btc_total += $btcTotal;
+                $btc_value += floatval($btcValue);
+                $btc_total += floatval($btcTotal);
                 continue;
             }
 
@@ -1259,15 +1252,23 @@ class API
 
             $balances[$asset]['btcValue'] = $btcValue;
             $balances[$asset]['btcTotal'] = $btcTotal;
-            $btc_value += $btcValue;
-            $btc_total += $btcTotal;
+            $btc_value += floatval($btcValue);
+            $btc_total += floatval($btcTotal);
         }
         if (is_array($priceData)) {
             uasort($balances, function ($opA, $opB) {
-                return $opA['btcValue'] < $opB['btcValue'];
+
+                if ($opA['btcValue'] == $opB['btcValue']) {
+                    return 0;
+                } else if ($opA['btcValue'] > $opB['btcValue']) {
+                    return -1;
+                } else {
+                    return 1;
+                }
+
             });
-            $this->btc_value = $btc_value;
-            $this->btc_total = $btc_total;
+            $this->btc_value = floatval($btc_value);
+            $this->btc_total = floatval($btc_total);
         }
         return $balances;
     }
@@ -1807,7 +1808,7 @@ class API
      * @param $callback callable closure
      * @return null
      */
-    public function depthCache($symbols, callable $callback)
+    public function depthCache($symbols, callable $callback = null)
     {
         if (!is_array($symbols)) {
             $symbols = [
@@ -1887,7 +1888,7 @@ class API
      * @param $callback callable closure
      * @return null
      */
-    public function trades($symbols, callable $callback)
+    public function trades($symbols, callable $callback = null)
     {
         if (!is_array($symbols)) {
             $symbols = [
@@ -1955,7 +1956,7 @@ class API
      * @param $callback callable closure
      * @return null
      */
-    public function ticker($symbol, callable $callback)
+    public function ticker($symbol, callable $callback = null)
     {
         $endpoint = $symbol ? strtolower($symbol) . '@ticker' : '!ticker@arr';
         $this->subscriptions[$endpoint] = true;
@@ -2006,7 +2007,7 @@ class API
      * @return null
      * @throws \Exception
      */
-    public function chart($symbols, string $interval = "30m", callable $callback, $limit = 500)
+    public function chart($symbols, string $interval = "30m", callable $callback = null, $limit = 500)
     {
         if (!is_array($symbols)) {
             $symbols = [
@@ -2087,7 +2088,7 @@ class API
      * @return null
      * @throws \Exception
      */
-    public function kline($symbols, string $interval = "30m", callable $callback)
+    public function kline($symbols, string $interval = "30m", callable $callback = null)
     {
         if (!is_array($symbols)) {
             $symbols = [
@@ -2382,9 +2383,9 @@ class API
         fwrite($fp, $result);
         fclose($fp);
     }
-    
+
     protected function floorDecimal($n, $decimals=2)
-    {   
+    {
         return floor($n * pow(10, $decimals)) / pow(10, $decimals);
     }
 
@@ -2404,5 +2405,5 @@ class API
     public function getXMbxUsedWeight1m () : int {
         $this->xMbxUsedWeight1m;
     }
-    
+
 }
