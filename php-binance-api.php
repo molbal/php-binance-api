@@ -395,6 +395,19 @@ class API
     }
 
     /**
+     * 24 hour rolling window price change statistics
+     * 
+     * @param $symbol string the currency symbol
+     *
+     * @return array
+     * @throws \Exception
+     */
+    public function symbol(string $symbol) {
+        return $this->httpRequest("v3/ticker/24hr", "GET", ["symbol" => $symbol], false);
+    }
+
+
+    /**
      * orderStatus attempts to get orders status
      *
      * $orderid = "123456789";
@@ -1225,8 +1238,8 @@ class API
             if ($asset === 'BTC') {
                 $balances[$asset]['btcValue'] = $obj['free'];
                 $balances[$asset]['btcTotal'] = $obj['free'] + $obj['locked'];
-                $btc_value += $obj['free'];
-                $btc_total += $obj['free'] + $obj['locked'];
+                $btc_value += floatval($obj['free']);
+                $btc_total += floatval($obj['free'] + $obj['locked']);
                 continue;
             } elseif ( $asset === 'USDT' || $asset === 'USDC' || $asset === 'PAX' || $asset === 'BUSD' ) {
                 $btcValue = $obj['free'] / $priceData['BTCUSDT'];
@@ -1381,7 +1394,7 @@ class API
 
         $output = [];
         foreach ($ticks as $tick) {
-            list($openTime, $open, $high, $low, $close, $assetVolume, $closeTime, $baseVolume, $trades, $assetBuyVolume, $takerBuyVolume, $ignored) = $tick;
+            [$openTime, $open, $high, $low, $close, $assetVolume, $closeTime, $baseVolume, $trades, $assetBuyVolume, $takerBuyVolume, $ignored] = $tick;
             $output[$openTime] = [
                 "open" => $open,
                 "high" => $high,
