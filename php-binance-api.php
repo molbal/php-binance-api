@@ -396,7 +396,7 @@ class API
 
     /**
      * 24 hour rolling window price change statistics
-     * 
+     *
      * @param $symbol string the currency symbol
      *
      * @return array
@@ -732,9 +732,9 @@ class API
      * @return array with error message or array of all the book prices
      * @throws \Exception
      */
-    public function bookPrices()
+    public function bookPrices(string $symbol)
     {
-        return $this->bookPriceData($this->httpRequest("v3/ticker/bookTicker"));
+        return $this->bookPriceData($this->httpRequest("v3/ticker/bookTicker", 'GET', ["symbol" => $symbol]));
     }
 
     /**
