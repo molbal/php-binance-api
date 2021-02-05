@@ -734,7 +734,7 @@ class API
      */
     public function bookPrices(string $symbol)
     {
-        return $this->bookPriceData($this->httpRequest("v3/ticker/bookTicker", 'GET', ["symbol" => $symbol]));
+        return $this->httpRequest("v3/ticker/bookTicker", 'GET', ["symbol" => $symbol]);
     }
 
     /**
