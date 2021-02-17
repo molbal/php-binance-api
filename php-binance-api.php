@@ -402,9 +402,11 @@ class API
      * @return array
      * @throws \Exception
      */
-    public function symbol(string $symbol) {
-        return $this->httpRequest("v3/ticker/24hr", "GET", ["symbol" => $symbol], false);
+    public function symbol(string $symbol = null) {
+        $params = $symbol ? ["symbol" => $symbol] : [];
+        return $this->httpRequest("v3/ticker/24hr", "GET", $params, false);
     }
+
 
 
     /**
@@ -570,7 +572,7 @@ class API
             "wapi" => true,
         ];
 
-        return $this->httpRequest("v3/tradeFee.html", 'GET', $params, true);
+        return $this->httpRequest("wapi/v3/tradeFee.html", 'GET', $params, true);
     }
 
     /**
