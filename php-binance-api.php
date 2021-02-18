@@ -752,6 +752,16 @@ class API
         return $this->httpRequest("v3/account", "GET", [], true);
     }
 
+
+    public function dustAssets(array $assets) {
+        $assetsString = "";
+        foreach ($assets as $asset) {
+            $assetsString .= "&asset=".$asset;
+        }
+        $assetsString = trim($assetsString, "&");
+        return $this->httpRequest("sapi/v1/asset/dust", "POST", [], true, $assetsString);
+    }
+
     /**
      * prevDay get 24hr ticker price change statistics for symbols
      *
@@ -928,7 +938,7 @@ class API
      * @return array containing the response
      * @throws \Exception
      */
-    protected function httpRequest(string $url, string $method = "GET", array $params = [], bool $signed = false)
+    protected function httpRequest(string $url, string $method = "GET", array $params = [], bool $signed = false, string $paramsExtra = "")
     {
         if (function_exists('curl_init') === false) {
             throw new \Exception("Sorry cURL is not installed!");
@@ -968,6 +978,9 @@ class API
             }
 
             $query = http_build_query($params, '', '&');
+            if ($paramsExtra) {
+                $query .= "&".$paramsExtra;
+            }
             $signature = hash_hmac('sha256', $query, $this->api_secret);
             if ($method === "POST") {
                 $endpoint = $base . $url;
