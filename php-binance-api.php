@@ -759,7 +759,7 @@ class API
             $assetsString .= "&asset=".$asset;
         }
         $assetsString = trim($assetsString, "&");
-        return $this->httpRequest("sapi/v1/asset/dust", "POST", [], true, $assetsString);
+        return $this->httpRequest("v1/asset/dust", "POST", ['sapi'=>true], true, $assetsString);
     }
 
     /**
@@ -974,6 +974,7 @@ class API
 
             if (isset($params['sapi'])) {
                 unset($params['sapi']);
+                \Illuminate\Support\Facades\Log::debug('sapi set');
                 $base = $this->sapi;
             }
 
@@ -981,11 +982,17 @@ class API
             if ($paramsExtra) {
                 $query .= "&".$paramsExtra;
             }
+
+
             $signature = hash_hmac('sha256', $query, $this->api_secret);
             if ($method === "POST") {
                 $endpoint = $base . $url;
 				$params['signature'] = $signature; // signature needs to be inside BODY
 				$query = http_build_query($params, '', '&'); // rebuilding query
+                if ($paramsExtra) {
+                    $query .= "&".$paramsExtra;
+                }
+                \Illuminate\Support\Facades\Log::debug('query: '.$query);
             } else {
                 $endpoint = $base . $url . '?' . $query . '&signature=' . $signature;
             }
