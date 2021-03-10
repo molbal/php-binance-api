@@ -974,7 +974,6 @@ class API
 
             if (isset($params['sapi'])) {
                 unset($params['sapi']);
-                \Illuminate\Support\Facades\Log::debug('sapi set');
                 $base = $this->sapi;
             }
 
@@ -992,7 +991,6 @@ class API
                 if ($paramsExtra) {
                     $query .= "&".$paramsExtra;
                 }
-                \Illuminate\Support\Facades\Log::debug('query: '.$query);
             } else {
                 $endpoint = $base . $url . '?' . $query . '&signature=' . $signature;
             }
